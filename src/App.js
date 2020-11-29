@@ -1,13 +1,16 @@
 import React, { Component } from "react";
+import { Route, Routes,} from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Users from "./components/users/Users";
 import axios from "axios";
 import Search from "./components/users/Search";
 import Alert from "./components/layout/Alert";
+import About from './components/layout/pages/About';
 
 class App extends Component {
   state = {
     users: [],
+    user: {},
     loading: false,
     alert: null,
   };
@@ -25,6 +28,16 @@ class App extends Component {
   //     console.log(error)
   //   }
   // }
+
+  //User Component
+  userComponent = async(userlogin) => {
+    this.setState( { loading: true } );
+    const url = `https://api.github.com/user?q=${userlogin}
+    &client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}
+    &client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`;
+    const userResponse = await axios.get(url);
+    this.setState({ user: userResponse.data, loading: false})
+  }
 
   //Search Users
   searchUsers = async (text) => {
@@ -52,12 +65,21 @@ class App extends Component {
       <div>
         <Navbar />
         <Alert alert={this.state.alert} />
-        <Search
-          searchUsers={this.searchUsers}
-          setAlert={this.setAlert}
-          clearUsers={this.clearUsers}
-          showClear={users.length > 0 ? true : false}
-        />
+        <Routes>
+          <Route
+            exact path='/'
+            element={
+              <Search
+                searchUsers={this.searchUsers}
+                setAlert={this.setAlert}
+                clearUsers={this.clearUsers}
+                showClear={users.length > 0 ? true : false}
+              />
+            }
+          />
+          <Route exact path='/about' element={<About/>}/>
+        </Routes>
+
         <Users loading={loading} users={users} />
       </div>
     );

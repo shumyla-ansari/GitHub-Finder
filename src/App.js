@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Route, Routes,} from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Users from "./components/users/Users";
+import User from "./components/users/User";
 import axios from "axios";
 import Search from "./components/users/Search";
 import Alert from "./components/layout/Alert";
@@ -13,32 +14,31 @@ class App extends Component {
     user: {},
     loading: false,
     alert: null,
+    repos: [],
   };
-  //   async componentDidMount() {
-  //     console.log(process.env.REACT_APP_GITHUB_CLIENT_SECRET)
 
-  //     try {
-  //       const response = await axios.get(apiUrl);
-  //       console.log(response.data)
-  //       this.setState({ users: response.data, loading: false})
-  //   // const {data} = await response.json();
-  //   // console.log(data)
-  //   // return users
-  //   } catch(error){
-  //     console.log(error)
-  //   }
-  // }
-
-  //User Component
-  userComponent = async(userlogin) => {
-    this.setState( { loading: true } );
-    const url = `https://api.github.com/user?q=${userlogin}
-    &client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}
+  //get User data
+  getUser = async (userlogin) => {
+    this.setState({ loading: true });
+    const url = `https://api.github.com/users/${userlogin}?
+    client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}
     &client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`;
     const userResponse = await axios.get(url);
     this.setState({ user: userResponse.data, loading: false})
+    console.log(userResponse)
   }
 
+  //Get users repos
+
+  getUserRepos = async (userlogin) => {
+    this.setState({ loading: true });
+    const url = `https://api.github.com/users/${userlogin}/repos?
+    per_page=5&sort=created:asc&client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}
+    &client_secret=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`;
+    const userRepo = await axios.get(url);
+    this.setState({ repos: userRepo.data, loading: false})
+    console.log(userRepo)
+  }
   //Search Users
   searchUsers = async (text) => {
     this.setState({ loading: true });
@@ -60,10 +60,11 @@ class App extends Component {
   };
 
   render() {
-    const { users, loading } = this.state;
+    const { users, loading, user, repos } = this.state;
     return (
       <div>
         <Navbar />
+        <User/>
         <Alert alert={this.state.alert} />
         <Routes>
           <Route
@@ -78,6 +79,15 @@ class App extends Component {
             }
           />
           <Route exact path='/about' element={<About/>}/>
+          <Route exact path='/user/:login' 
+          render={props => 
+          <User {...props} 
+          getUser={this.getUser}
+          getUserRepos={this.getUserRepos}
+          user={user}
+          repos={repos}
+          loading={loading}/>}
+          />
         </Routes>
 
         <Users loading={loading} users={users} />
